@@ -7,14 +7,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// ── identity (swap these before submitting) ──────────────────────────────────
+//identity 
 const IDENT = {
-  user_id: "johndoe_17091999",
-  email_id: "john.doe@srm.edu.in",
-  college_roll_number: "RA2211003010001",
+  user_id: "adarshanand_10102003",
+  email_id: "aa0759@srmist.edu.in",
+  college_roll_number: "RA2311003010061",
 };
 
-// ── validation ───────────────────────────────────────────────────────────────
+
 const EDGE_RE = /^([A-Z])->([A-Z])$/;
 
 function parseRawEntry(raw) {
@@ -27,9 +27,9 @@ function parseRawEntry(raw) {
   return { src, dst, original: trimmed };
 }
 
-// ── graph builder ─────────────────────────────────────────────────────────────
+
 function buildAdjacency(validEdges) {
-  // childOf[node] = first-encountered parent  (multi-parent: first wins)
+ 
   const childOf = {};
   const childrenOf = {};
   const allNodes = new Set();
@@ -42,12 +42,11 @@ function buildAdjacency(validEdges) {
       if (!childrenOf[src]) childrenOf[src] = [];
       childrenOf[src].push(dst);
     }
-    // else: second parent → silently drop
+    
   }
   return { childOf, childrenOf, allNodes };
 }
 
-// ── component finder (union-find) ─────────────────────────────────────────────
 function findComponents(allNodes, childrenOf) {
   const parent = {};
   for (const n of allNodes) parent[n] = n;
@@ -77,7 +76,7 @@ function findComponents(allNodes, childrenOf) {
   return Object.values(groups);
 }
 
-// ── cycle detection (DFS) ─────────────────────────────────────────────────────
+// cycle detection
 function hasCycleInGroup(nodes, childrenOf) {
   const visited = new Set();
   const onStack = new Set();
@@ -102,7 +101,7 @@ function hasCycleInGroup(nodes, childrenOf) {
   return false;
 }
 
-// ── tree builder (nested object) ──────────────────────────────────────────────
+// tree builde
 function buildNestedTree(node, childrenOf, visited = new Set()) {
   if (visited.has(node)) return {};
   visited.add(node);
@@ -113,7 +112,6 @@ function buildNestedTree(node, childrenOf, visited = new Set()) {
   return subtree;
 }
 
-// ── depth calculator ──────────────────────────────────────────────────────────
 function calcDepth(node, childrenOf, memo = {}) {
   if (node in memo) return memo[node];
   const kids = childrenOf[node] || [];
@@ -123,7 +121,7 @@ function calcDepth(node, childrenOf, memo = {}) {
   return memo[node];
 }
 
-// ── main handler ──────────────────────────────────────────────────────────────
+
 app.post("/bfhl", (req, res) => {
   const rawList = Array.isArray(req.body?.data) ? req.body.data : [];
 
@@ -161,14 +159,14 @@ app.post("/bfhl", (req, res) => {
   for (const group of components) {
     const isCyclic = hasCycleInGroup(group, childrenOf);
 
-    // find roots (nodes not appearing as child)
+   
     const roots = group.filter(n => childOf[n] === undefined);
     let groupRoot;
     if (roots.length === 0) {
-      // pure cycle — use lex smallest
+    
       groupRoot = [...group].sort()[0];
     } else {
-      groupRoot = roots.sort()[0]; // lex smallest root if multiple
+      groupRoot = roots.sort()[0]; 
     }
 
     if (isCyclic) {
@@ -192,7 +190,7 @@ app.post("/bfhl", (req, res) => {
     }
   }
 
-  // sort hierarchies for determinism (roots alphabetically)
+ 
   hierarchies.sort((a, b) => a.root.localeCompare(b.root));
 
   res.json({
